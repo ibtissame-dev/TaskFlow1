@@ -1,0 +1,8 @@
+public class Utilisateur {
+
+    public void creerProjet() {
+    }
+
+    public void rejoindreProjet() {
+    }
+}
