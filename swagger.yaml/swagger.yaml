@@ -1,0 +1,316 @@
+openapi: 3.0.0
+info:
+  title: TaskFlow API
+  description: API de gestion de tâches collaborative (Conception Logicielle)
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080/api
+    description: Serveur de développement local
+tags:
+  - name: Users
+    description: Gestion des utilisateurs et de l'authentification
+  - name: Projects
+    description: Gestion des projets et de leurs membres
+  - name: Tasks
+    description: Gestion des tâches au sein des projets
+  - name: Notifications
+    description: Système de notifications pour les utilisateurs
+
+paths:
+  /users/register:
+    post:
+      tags:
+        - Users
+      summary: Inscription simplifiée
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreate'
+      responses:
+        '201':
+          description: Utilisateur créé
+
+  /users/login:
+    post:
+      tags:
+        - Users
+      summary: Connexion simplifiée
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '200':
+          description: Authentification réussie
+
+  /projects:
+    post:
+      tags:
+        - Projects
+      summary: Créer un projet
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectCreate'
+      responses:
+        '201':
+          description: Projet créé
+    
+  /projects/{projectId}:
+    put:
+      tags:
+        - Projects
+      summary: Modifier un projet
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectCreate'
+      responses:
+        '200':
+          description: Projet modifié
+    delete:
+      tags:
+        - Projects
+      summary: Supprimer un projet
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Projet supprimé
+
+  /projects/{projectId}/members:
+    post:
+      tags:
+        - Projects
+      summary: Ajouter un membre à un projet
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userId:
+                  type: integer
+      responses:
+        '200':
+          description: Membre ajouté
+
+  /projects/{projectId}/members/{userId}:
+    delete:
+      tags:
+        - Projects
+      summary: Supprimer un membre d'un projet
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Membre retiré
+
+  /projects/{projectId}/tasks:
+    post:
+      tags:
+        - Tasks
+      summary: Créer une tâche dans un projet
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskCreate'
+      responses:
+        '201':
+          description: Tâche créée
+
+  /tasks/{taskId}:
+    put:
+      tags:
+        - Tasks
+      summary: Modifier une tâche
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskCreate'
+      responses:
+        '200':
+          description: Tâche modifiée
+    delete:
+      tags:
+        - Tasks
+      summary: Supprimer une tâche
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Tâche supprimée
+
+  /tasks/{taskId}/assign:
+    patch:
+      tags:
+        - Tasks
+      summary: Attribuer une tâche à un membre
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userId:
+                  type: integer
+      responses:
+        '200':
+          description: Tâche attribuée et notification envoyée
+
+  /tasks/{taskId}/status:
+    patch:
+      tags:
+        - Tasks
+      summary: Changer le statut d'une tâche
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum: [A_FAIRE, EN_COURS, TERMINEE]
+      responses:
+        '200':
+          description: Statut mis à jour
+
+  /tasks:
+    get:
+      tags:
+        - Tasks
+      summary: Lister et filtrer les tâches
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [A_FAIRE, EN_COURS, TERMINEE]
+        - name: assigneeId
+          in: query
+          schema:
+            type: integer
+        - name: projectId
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Liste des tâches filtrées
+
+components:
+  schemas:
+    UserCreate:
+      type: object
+      required:
+        - name
+        - email
+        - password
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+        role:
+          type: string
+          enum: [ADMIN, MEMBER]
+          default: MEMBER
+          
+    ProjectCreate:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+
+    TaskCreate:
+      type: object
+      required:
+        - title
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        dueDate:
+          type: string
+          format: date
